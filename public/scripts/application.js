@@ -25,14 +25,10 @@ function parseData(d) {
 }
 
 function operateData(data) {
-  // Add X axis --> it is a date format
+  // Add X axis
   const x = d3
     .scaleTime()
-    .domain(
-      d3.extent(data, function (d) {
-        return d.date;
-      })
-    )
+    .domain(d3.extent(data, (d) => d.date))
     .range([0, width]);
   xAxis = svg
     .append("g")
@@ -42,17 +38,12 @@ function operateData(data) {
   // Add Y axis
   const y = d3
     .scaleLinear()
-    .domain([
-      0,
-      d3.max(data, function (d) {
-        return +d.value;
-      }),
-    ])
+    .domain([0, d3.max(data, (d) => +d.value)])
     .range([height, 0]);
-  yAxis = svg.append("g").call(d3.axisLeft(y));
+  yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(y));
 
   // Add a clipPath: everything out of this area won't be drawn.
-  const clip = svg
+  svg
     .append("defs")
     .append("svg:clipPath")
     .attr("id", "clip")
@@ -64,12 +55,12 @@ function operateData(data) {
 
   // Add brushing
   const brush = d3
-    .brushX() // Add the brush feature using the d3.brush function
+    .brushX()
     .extent([
       [0, 0],
       [width, height],
-    ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
-    .on("end", updateChart); // Each time the brush selection changes, trigger the 'updateChart' function
+    ])
+    .on("end", updateChart);
 
   // Create the line variable: where both the line and the brush take place
   const line = svg.append("g").attr("clip-path", "url(#clip)");
@@ -86,36 +77,35 @@ function operateData(data) {
       "d",
       d3
         .line()
-        .x(function (d) {
-          return x(d.date);
-        })
-        .y(function (d) {
-          return y(d.value);
-        })
+        .x((d) => x(d.date))
+        .y((d) => y(d.value))
     );
 
   // Add the brushing
   line.append("g").attr("class", "brush").call(brush);
-
-  // A function that set idleTimeOut to null
-  let idleTimeout;
-  function idled() {
-    idleTimeout = null;
-  }
 
   // A function that update the chart for given boundaries
   function updateChart() {
     // What are the selected boundaries?
     extent = d3.event.selection;
 
-    // If no selection, back to initial coordinate. Otherwise, update X axis domain
-    if (!extent) {
-      if (!idleTimeout) {
-        return (idleTimeout = setTimeout(idled, 350));
-      } // This allows to wait a little bit
-      x.domain([4, 8]);
-    } else {
+    if (extent) {
       x.domain([x.invert(extent[0]), x.invert(extent[1])]);
+      const yMin = data.findIndex(
+        (d) => d.date.getTime() >= x.invert(extent[0]).getTime()
+      );
+      const yMax = data.findIndex(
+        (d) => d.date.getTime() >= x.invert(extent[1]).getTime()
+      );
+      let max = 0;
+      for (let i = yMin; i < yMax; i++) {
+        const d = data[i];
+        max = +d.value > max ? +d.value : max;
+      }
+      console.log(max, y(+max), "max");
+
+      y.domain([0, max]);
+      svg.select(".y-axis").transition().call(d3.axisLeft(y));
       line.select(".brush").call(brush.move, null); // This remove the grey brush area as soon as the selection has been done
     }
 
@@ -129,23 +119,17 @@ function operateData(data) {
         "d",
         d3
           .line()
-          .x(function (d) {
-            return x(d.date);
-          })
-          .y(function (d) {
-            return y(d.value);
-          })
+          .x((d) => x(d.date))
+          .y((d) => y(d.value))
       );
   }
 
   // If user double click, reinitialize the chart
-  svg.on("dblclick", function () {
-    x.domain(
-      d3.extent(data, function (d) {
-        return d.date;
-      })
-    );
+  svg.on("dblclick", () => {
+    x.domain(d3.extent(data, (d) => d.date));
     xAxis.transition().call(d3.axisBottom(x));
+    y.domain([0, d3.max(data, (d) => +d.value)]);
+    svg.select(".y-axis").transition().call(d3.axisLeft(y));
     line
       .select(".line")
       .transition()
@@ -153,12 +137,8 @@ function operateData(data) {
         "d",
         d3
           .line()
-          .x(function (d) {
-            return x(d.date);
-          })
-          .y(function (d) {
-            return y(d.value);
-          })
+          .x((d) => x(d.date))
+          .y((d) => y(d.value))
       );
   });
 }
