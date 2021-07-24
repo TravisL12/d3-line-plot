@@ -90,19 +90,25 @@ function operateData(data) {
     extent = d3.event.selection;
 
     if (extent) {
-      x.domain([x.invert(extent[0]), x.invert(extent[1])]);
-      const yMin = data.findIndex(
-        (d) => d.date.getTime() >= x.invert(extent[0]).getTime()
+      const [xMin, xMax] = extent.map((val) => x.invert(val));
+      x.domain([xMin, xMax]);
+
+      xMin.setHours(0);
+      xMin.setMinutes(0);
+      xMin.setSeconds(0);
+      xMin.setMilliseconds(0);
+
+      xMax.setHours(0);
+      xMax.setMinutes(0);
+      xMax.setSeconds(0);
+      xMax.setMilliseconds(0);
+
+      const yMin = data.findIndex((d) => d.date.getTime() >= xMin.getTime());
+      const yMax = data.findIndex((d) => d.date.getTime() >= xMax.getTime());
+      const dates = data.filter(
+        (d) => d.date >= data[yMin].date && d.date <= data[yMax].date
       );
-      const yMax = data.findIndex(
-        (d) => d.date.getTime() >= x.invert(extent[1]).getTime()
-      );
-      let max = 0;
-      for (let i = yMin; i < yMax; i++) {
-        const d = data[i];
-        max = +d.value > max ? +d.value : max;
-      }
-      console.log(max, y(+max), "max");
+      const max = d3.max(dates, (d) => +d.value);
 
       y.domain([0, max]);
       svg.select(".y-axis").transition().call(d3.axisLeft(y));
