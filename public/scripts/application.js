@@ -46,13 +46,14 @@ const line = svg.append("g").attr("clip-path", "url(#clip)");
 
 // Read the data
 // original: https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv
-d3.csv("public/spending.csv", parseData, operateData);
-
-function parseData(d) {
-  const date = d3.timeParse("%m/%d/%Y")(d.date);
-  const amount = +d.amount;
-  return { ...d, date, amount };
-}
+d3.csv("public/spending.csv").then((rows) => {
+  const data = rows.map((d) => {
+    const date = d3.timeParse("%m/%d/%Y")(d.date);
+    const amount = +d.amount;
+    return { ...d, date, amount };
+  });
+  operateData(data);
+});
 
 function updateLine(duration = 250) {
   line
@@ -100,8 +101,8 @@ function operateData(data) {
   line.append("g").attr("class", "brush").call(brush);
   updateLine();
 
-  function updateChart() {
-    extent = d3.event.selection;
+  function updateChart(event) {
+    const extent = event.selection;
 
     if (extent) {
       const [xMin, xMax] = extent.map((val) => restartDay(xScale.invert(val)));
