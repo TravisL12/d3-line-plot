@@ -13,7 +13,6 @@ const restartDay = (date) => {
   return date;
 };
 
-// append the svg object to the body of the page
 var svg = d3
   .select("#my_dataviz")
   .append("svg")
@@ -34,21 +33,21 @@ function parseData(d) {
 
 function operateData(data) {
   // Add X axis
-  const x = d3
+  const xScale = d3
     .scaleTime()
     .domain(d3.extent(data, (d) => d.date))
     .range([0, width]);
   xAxis = svg
     .append("g")
     .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
+    .call(d3.axisBottom(xScale));
 
   // Add Y axis
-  const y = d3
+  const yScale = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.amount)])
     .range([height, 0]);
-  yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(y));
+  yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(yScale));
 
   // Add a clipPath: everything out of this area won't be drawn.
   svg
@@ -85,8 +84,8 @@ function operateData(data) {
       "d",
       d3
         .line()
-        .x((d) => x(d.date))
-        .y((d) => y(d.amount))
+        .x((d) => xScale(d.date))
+        .y((d) => yScale(d.amount))
     );
 
   // Add the brushing
@@ -101,19 +100,17 @@ function operateData(data) {
         "d",
         d3
           .line()
-          .x((d) => x(d.date))
-          .y((d) => y(d.amount))
+          .x((d) => xScale(d.date))
+          .y((d) => yScale(d.amount))
       );
   }
 
-  // A function that update the chart for given boundaries
   function updateChart() {
-    // What are the selected boundaries?
     extent = d3.event.selection;
 
     if (extent) {
-      const [xMin, xMax] = extent.map((val) => restartDay(x.invert(val)));
-      x.domain([xMin, xMax]);
+      const [xMin, xMax] = extent.map((val) => restartDay(xScale.invert(val)));
+      xScale.domain([xMin, xMax]);
 
       const yMin = data.findIndex((d) => d.date.getTime() >= xMin.getTime());
       const yMax = data.findIndex((d) => d.date.getTime() >= xMax.getTime());
@@ -121,23 +118,23 @@ function operateData(data) {
         (d) => d.date >= data[yMin].date && d.date <= data[yMax].date
       );
 
-      y.domain([0, d3.max(dates, (d) => d.amount)]);
-      svg.select(".y-axis").transition().call(d3.axisLeft(y));
+      yScale.domain([0, d3.max(dates, (d) => d.amount)]);
+      svg.select(".y-axis").transition().call(d3.axisLeft(yScale));
       line.select(".brush").call(brush.move, null); // This remove the grey brush area as soon as the selection has been done
     }
 
     // Update axis and line position
-    xAxis.transition().duration(1000).call(d3.axisBottom(x));
+    xAxis.transition().duration(1000).call(d3.axisBottom(xScale));
     updateLine(1000);
   }
 
   // If user double click, reinitialize the chart
   svg.on("dblclick", () => {
-    x.domain(d3.extent(data, (d) => d.date));
-    xAxis.transition().call(d3.axisBottom(x));
+    xScale.domain(d3.extent(data, (d) => d.date));
+    xAxis.transition().call(d3.axisBottom(xScale));
 
-    y.domain([0, d3.max(data, (d) => d.amount)]);
-    svg.select(".y-axis").transition().call(d3.axisLeft(y));
+    yScale.domain([0, d3.max(data, (d) => d.amount)]);
+    svg.select(".y-axis").transition().call(d3.axisLeft(yScale));
     updateLine();
   });
 }
