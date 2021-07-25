@@ -1,9 +1,11 @@
 // https://www.d3-graph-gallery.com/graph/line_brushZoom.html
+const viewWidth = 1000;
+const viewHeight = 500;
 
 // set the dimensions and margins of the graph
 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
-const width = 1200 - margin.left - margin.right;
-const height = 800 - margin.top - margin.bottom;
+const width = viewWidth - margin.left - margin.right;
+const height = viewHeight - margin.top - margin.bottom;
 
 const restartDay = (date) => {
   date.setHours(0);
