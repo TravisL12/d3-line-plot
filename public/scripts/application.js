@@ -60,6 +60,15 @@ d3.csv("public/spending.csv").then((rows) => {
     const amount = +d.amount;
     return { ...d, date, amount };
   });
+  const max = d3.max(data, (d) => d.amount);
+  const bins = d3
+    .bin()
+    .value((d) => d.amount)
+    // .thresholds(d3.thresholdFreedmanDiaconis)
+    .thresholds(500)
+    .domain([0, max]);
+  console.log(bins(data).filter((d) => d.length > 0));
+
   operateData(data);
 });
 
