@@ -1,13 +1,7 @@
-// https://www.d3-graph-gallery.com/graph/line_brushZoom.html
-const viewWidth = 1000;
-const viewHeight = 500;
+import { drawHistogramChart } from "./histogramChart.js";
+import { drawLineChart } from "./lineChart.js";
 
-// set the dimensions and margins of the graph
-const margin = { top: 10, right: 30, bottom: 30, left: 60 };
-const width = viewWidth - margin.left - margin.right;
-const height = viewHeight - margin.top - margin.bottom;
-
-const restartDay = (date) => {
+export const restartDay = (date) => {
   date.setHours(0);
   date.setMinutes(0);
   date.setSeconds(0);
@@ -15,39 +9,6 @@ const restartDay = (date) => {
   return date;
 };
 
-var svg = d3
-  .select("#my_dataviz")
-  .append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-const xScale = d3.scaleTime().range([0, width]);
-const xAxis = svg
-  .append("g")
-  .attr("transform", "translate(0," + height + ")")
-  .call(d3.axisBottom(xScale));
-
-const yScale = d3.scaleLinear().range([height, 0]);
-const yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(yScale));
-
-// Add a clipPath: everything out of this area won't be drawn.
-svg
-  .append("defs")
-  .append("svg:clipPath")
-  .attr("id", "clip")
-  .append("svg:rect")
-  .attr("width", width)
-  .attr("height", height)
-  .attr("x", 0)
-  .attr("y", 0);
-
-// Create the line variable: where both the line and the brush take place
-const line = svg.append("g").attr("clip-path", "url(#clip)");
-
-// Read the data
-// original: https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv
 d3.csv("public/spending.csv").then((rows) => {
   const cumData = rows.reduce((acc, d, i) => {
     const date = d3.timeParse("%m/%d/%Y")(d.date);
@@ -55,95 +16,20 @@ d3.csv("public/spending.csv").then((rows) => {
     return [...acc, { ...d, date, amount }];
   }, []);
 
-  const data = rows.map((d) => {
-    const date = d3.timeParse("%m/%d/%Y")(d.date);
-    const amount = +d.amount;
-    return { ...d, date, amount };
-  });
-  const max = d3.max(data, (d) => d.amount);
+  const data = rows
+    .map((d) => {
+      const date = d3.timeParse("%m/%d/%Y")(d.date);
+      const amount = +d.amount;
+      return { ...d, date, amount };
+    })
+    .filter(({ amount }) => amount > 0);
+
   const bins = d3
     .bin()
     .value((d) => d.amount)
-    // .thresholds(d3.thresholdFreedmanDiaconis)
-    .thresholds(500)
-    .domain([0, max]);
-  console.log(bins(data).filter((d) => d.length > 0));
+    .thresholds(500);
+  const binsData = bins(data).filter((d) => d.length > 0);
 
-  operateData(data);
+  drawLineChart(data);
+  drawHistogramChart(binsData);
 });
-
-function updateLine(duration = 250) {
-  line
-    .select(".line")
-    .transition()
-    .duration(duration)
-    .attr(
-      "d",
-      d3
-        .line()
-        .x((d) => xScale(d.date))
-        .y((d) => yScale(d.amount))
-    );
-}
-
-function setDomains(data) {
-  xScale.domain(d3.extent(data, (d) => d.date));
-  xAxis.transition().call(d3.axisBottom(xScale));
-
-  yScale.domain([0, d3.max(data, (d) => d.amount)]);
-  svg.select(".y-axis").transition().call(d3.axisLeft(yScale));
-}
-
-function operateData(data) {
-  setDomains(data);
-
-  // Add the line
-  line
-    .append("path")
-    .data([data])
-    .attr("class", "line")
-    .attr("fill", "none")
-    .attr("stroke", "steelblue")
-    .attr("stroke-width", 1.5);
-
-  // Add brushing
-  const brush = d3
-    .brushX()
-    .extent([
-      [0, 0],
-      [width, height],
-    ])
-    .on("end", updateChart);
-
-  line.append("g").attr("class", "brush").call(brush);
-  updateLine();
-
-  function updateChart(event) {
-    const extent = event.selection;
-
-    if (extent) {
-      const [xMin, xMax] = extent.map((val) => restartDay(xScale.invert(val)));
-      const yMin = data.findIndex((d) => d.date.getTime() >= xMin.getTime());
-      const yMax = data.findIndex((d) => d.date.getTime() >= xMax.getTime());
-      const dates = data.filter(
-        (d) => d.date >= data[yMin].date && d.date <= data[yMax].date
-      );
-
-      xScale.domain([xMin, xMax]);
-      yScale.domain([0, d3.max(dates, (d) => d.amount)]);
-
-      xAxis.transition().duration(1000).call(d3.axisBottom(xScale));
-      yAxis.transition().call(d3.axisLeft(yScale));
-
-      line.select(".brush").call(brush.move, null); // This remove the grey brush area as soon as the selection has been done
-    }
-
-    updateLine(1000);
-  }
-
-  // If user double click, reinitialize the chart
-  svg.on("dblclick", () => {
-    setDomains(data);
-    updateLine();
-  });
-}
