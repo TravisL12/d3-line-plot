@@ -62,7 +62,9 @@ function setDomains(data) {
   svg.select(".y-axis").transition().call(d3.axisLeft(yScale));
 }
 
-export function drawLineChart(data) {
+export function drawLineChart(data, drawHistogramChart) {
+  drawHistogramChart(data);
+
   // Add the line
   line
     .append("path")
@@ -95,7 +97,7 @@ export function drawLineChart(data) {
       const dates = data.filter(
         (d) => d.date >= data[yMin].date && d.date <= data[yMax].date
       );
-
+      drawHistogramChart(dates);
       xScale.domain([xMin, xMax]);
       yScale.domain([0, d3.max(dates, (d) => d.amount)]);
 
@@ -111,6 +113,7 @@ export function drawLineChart(data) {
   // If user double click, reinitialize the chart
   svg.on("dblclick", () => {
     setDomains(data);
+    drawHistogramChart(data);
     updateLine();
   });
 }

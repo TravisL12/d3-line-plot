@@ -1,6 +1,6 @@
 // https://www.d3-graph-gallery.com/graph/line_brushZoom.html
-const mainWidth = 600;
-const mainHeight = 300;
+const mainWidth = 1000;
+const mainHeight = 400;
 
 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
 const height = mainHeight - margin.top - margin.bottom;
@@ -30,27 +30,46 @@ const yAxis = svg
   .attr("class", "y-axis")
   .attr("transform", `translate(${margin.left})`);
 
-export const drawHistogramChart = (data) => {
+export const drawHistogramChart = (binData) => {
+  const bins = d3
+    .bin()
+    .value((d) => d.amount)
+    .thresholds(500);
+  const data = bins(binData).filter((d) => d.length > 0);
+
   xScale.domain(Object.keys(data));
   xAxis.call(d3.axisBottom(xScale));
 
-  yScale.domain([0, 1000]);
+  yScale.domain([0, d3.max(data, (d) => d.length)]);
   yAxis.transition().call(d3.axisLeft(yScale));
 
   svg
     .selectAll(".bars")
     .selectAll(".bar")
     .data(data)
-    .join((enter) => {
-      const g = enter.append("g").attr("class", "bar");
+    .join(
+      (enter) => {
+        const g = enter.append("g").attr("class", "bar");
 
-      g.append("rect")
-        .attr("width", xScale.bandwidth())
-        .attr("height", (d) => height - yScale(d.length))
-        .attr("x", (_, i) => xScale(i))
-        .attr("y", (d) => yScale(d.length))
-        .attr("fill", "black");
+        g.append("rect")
+          .attr("x", (_, i) => xScale(i))
+          .attr("y", (d) => yScale(d.length))
+          .attr("height", (d) => height - yScale(d.length))
+          .attr("width", xScale.bandwidth())
+          .attr("stroke-width", 1)
+          .attr("stroke", "black")
+          .attr("fill", "red");
 
-      return g;
-    });
+        return g;
+      },
+      (update) => {
+        update
+          .select("rect")
+          .transition()
+          .attr("x", (_, i) => xScale(i))
+          .attr("y", (d) => yScale(d.length))
+          .attr("height", (d) => height - yScale(d.length))
+          .attr("width", xScale.bandwidth());
+      }
+    );
 };

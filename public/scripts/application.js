@@ -24,12 +24,5 @@ d3.csv("public/spending.csv").then((rows) => {
     })
     .filter(({ amount }) => amount > 0);
 
-  const bins = d3
-    .bin()
-    .value((d) => d.amount)
-    .thresholds(500);
-  const binsData = bins(data).filter((d) => d.length > 0);
-
-  drawLineChart(data);
-  drawHistogramChart(binsData);
+  drawLineChart(data, drawHistogramChart);
 });
