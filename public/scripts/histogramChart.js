@@ -1,4 +1,3 @@
-// https://www.d3-graph-gallery.com/graph/line_brushZoom.html
 const mainWidth = 1000;
 const mainHeight = 400;
 
@@ -13,8 +12,9 @@ const svg = d3
   .attr("height", mainHeight)
   .attr("class", "histogram")
   .append("g")
-  .attr("class", "bars")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+svg.append("g").attr("class", "bars");
 
 const xScale = d3.scaleBand().range([0, width]).padding(0.2);
 const xAxis = svg
@@ -42,6 +42,7 @@ export const drawHistogramChart = (binData) => {
   yAxis.transition().call(d3.axisLeft(yScale));
 
   svg
+    .selectAll(".bars")
     .selectAll(".bar")
     .data(data)
     .join(
