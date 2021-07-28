@@ -13,19 +13,15 @@ const svg = d3
   .select("#lineChart")
   .append("svg")
   .attr("width", viewWidth)
-  .attr("height", viewHeight);
+  .attr("height", viewHeight)
+  .append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 const xScale = d3.scaleTime().range([0, width]);
-const xAxis = svg
-  .append("g")
-  .attr("transform", `translate(${margin.left}, ${height + margin.top})`)
-  .call(d3.axisBottom(xScale));
+const xAxis = svg.append("g").attr("transform", `translate(0, ${height})`);
 
 const yScale = d3.scaleLinear().range([height, 0]);
-const yAxis = svg
-  .append("g")
-  .attr("class", "y-axis")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+const yAxis = svg.append("g").attr("class", "y-axis");
 
 // Add a clipPath: everything out of this area won't be drawn.
 svg
@@ -39,10 +35,7 @@ svg
   .attr("y", 0);
 
 // Create the line variable: where both the line and the brush take place
-const line = svg
-  .append("g")
-  .attr("clip-path", "url(#clip)")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+const line = svg.append("g").attr("clip-path", "url(#clip)");
 
 function updateLine(duration = 250) {
   line

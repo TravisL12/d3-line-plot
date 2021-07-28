@@ -11,9 +11,7 @@ const svg = d3
   .append("svg")
   .attr("width", mainWidth)
   .attr("height", mainHeight)
-  .attr("class", "histogram");
-
-svg
+  .attr("class", "histogram")
   .append("g")
   .attr("class", "bars")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -22,13 +20,10 @@ const xScale = d3.scaleBand().range([0, width]).padding(0.2);
 const xAxis = svg
   .append("g")
   .attr("class", "x-axis")
-  .attr("transform", `translate(${margin.left}, ${height + margin.top})`);
+  .attr("transform", `translate(0, ${height})`);
 
 const yScale = d3.scaleLinear().range([height, 0]);
-const yAxis = svg
-  .append("g")
-  .attr("class", "y-axis")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+const yAxis = svg.append("g").attr("class", "y-axis");
 
 export const drawHistogramChart = (binData) => {
   const bins = d3
@@ -47,7 +42,6 @@ export const drawHistogramChart = (binData) => {
   yAxis.transition().call(d3.axisLeft(yScale));
 
   svg
-    .selectAll(".bars")
     .selectAll(".bar")
     .data(data)
     .join(
