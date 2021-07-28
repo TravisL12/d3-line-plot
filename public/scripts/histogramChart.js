@@ -2,33 +2,33 @@
 const mainWidth = 1000;
 const mainHeight = 400;
 
-const margin = { top: 10, right: 30, bottom: 30, left: 60 };
+const margin = { top: 30, right: 30, bottom: 30, left: 40 };
 const height = mainHeight - margin.top - margin.bottom;
 const width = mainWidth - margin.left - margin.right;
 
 const svg = d3
   .select("#histogramChart")
   .append("svg")
-  .attr("width", width)
-  .attr("height", height)
+  .attr("width", mainWidth)
+  .attr("height", mainHeight)
   .attr("class", "histogram");
 
 svg
   .append("g")
   .attr("class", "bars")
-  .attr("transform", `translate(${margin.left})`);
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 const xScale = d3.scaleBand().range([0, width]).padding(0.2);
 const xAxis = svg
   .append("g")
   .attr("class", "x-axis")
-  .attr("transform", `translate(${margin.left}, ${height})`);
+  .attr("transform", `translate(${margin.left}, ${height + margin.top})`);
 
 const yScale = d3.scaleLinear().range([height, 0]);
 const yAxis = svg
   .append("g")
   .attr("class", "y-axis")
-  .attr("transform", `translate(${margin.left})`);
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 export const drawHistogramChart = (binData) => {
   const bins = d3
@@ -38,7 +38,10 @@ export const drawHistogramChart = (binData) => {
   const data = bins(binData).filter((d) => d.length > 0);
 
   xScale.domain(Object.keys(data));
-  xAxis.call(d3.axisBottom(xScale));
+  xAxis
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .text((d) => +d + 1);
 
   yScale.domain([0, d3.max(data, (d) => d.length)]);
   yAxis.transition().call(d3.axisLeft(yScale));
@@ -58,7 +61,7 @@ export const drawHistogramChart = (binData) => {
           .attr("width", xScale.bandwidth())
           .attr("stroke-width", 1)
           .attr("stroke", "black")
-          .attr("fill", "red");
+          .attr("fill", "pink");
 
         return g;
       },

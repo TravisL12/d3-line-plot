@@ -5,26 +5,27 @@ const viewWidth = 1000;
 const viewHeight = 500;
 
 // set the dimensions and margins of the graph
-const margin = { top: 10, right: 30, bottom: 30, left: 60 };
+const margin = { top: 10, right: 30, bottom: 30, left: 40 };
 const width = viewWidth - margin.left - margin.right;
 const height = viewHeight - margin.top - margin.bottom;
 
 const svg = d3
   .select("#lineChart")
   .append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  .attr("width", viewWidth)
+  .attr("height", viewHeight);
 
 const xScale = d3.scaleTime().range([0, width]);
 const xAxis = svg
   .append("g")
-  .attr("transform", "translate(0," + height + ")")
+  .attr("transform", `translate(${margin.left}, ${height + margin.top})`)
   .call(d3.axisBottom(xScale));
 
 const yScale = d3.scaleLinear().range([height, 0]);
-const yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(yScale));
+const yAxis = svg
+  .append("g")
+  .attr("class", "y-axis")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 // Add a clipPath: everything out of this area won't be drawn.
 svg
@@ -38,7 +39,10 @@ svg
   .attr("y", 0);
 
 // Create the line variable: where both the line and the brush take place
-const line = svg.append("g").attr("clip-path", "url(#clip)");
+const line = svg
+  .append("g")
+  .attr("clip-path", "url(#clip)")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 function updateLine(duration = 250) {
   line
