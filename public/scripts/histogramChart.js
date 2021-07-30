@@ -29,7 +29,7 @@ export const drawHistogramChart = (binData) => {
   const bins = d3
     .bin()
     .value((d) => d.amount)
-    .thresholds(500);
+    .thresholds(50);
   const data = bins(binData).filter((d) => d.length > 0);
 
   xScale.domain(Object.keys(data));
