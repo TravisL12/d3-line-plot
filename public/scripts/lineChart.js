@@ -1,4 +1,5 @@
 import { restartDay } from "./application.js";
+import { drawHistogramChart } from "./histogramChart.js";
 
 // https://www.d3-graph-gallery.com/graph/line_brushZoom.html
 const viewWidth = 1000;
@@ -58,7 +59,7 @@ function setDomains(data) {
   svg.select(".y-axis").transition().call(d3.axisLeft(yScale));
 }
 
-export function drawLineChart(data, drawHistogramChart) {
+export function drawLineChart(data) {
   drawHistogramChart(data);
 
   // Add the line

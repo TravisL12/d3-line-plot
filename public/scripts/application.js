@@ -1,4 +1,3 @@
-import { drawHistogramChart } from "./histogramChart.js";
 import { drawLineChart } from "./lineChart.js";
 
 export const restartDay = (date) => {
@@ -19,5 +18,5 @@ d3.csv(
     return { date, amount };
   });
 
-  drawLineChart(data, drawHistogramChart);
+  drawLineChart(data);
 });
